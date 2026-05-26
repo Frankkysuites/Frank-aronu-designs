@@ -329,7 +329,7 @@ export default function Admin() {
       return;
     }
     const projectToAdd = { ...newProject, id: Date.now(), createdAt: Date.now() };
-    saveProjects([...projects, projectToAdd]);
+    await saveProjects([...projects, projectToAdd]);
     setIsAddingProject(false);
     setNewProject({
       id: Date.now(),
@@ -345,12 +345,12 @@ export default function Admin() {
 
   const deleteProject = (id: number) => {
     if (confirm("Are you sure you want to delete this project?")) {
-      saveProjects(projects.filter(p => p.id !== id));
+      await saveProjects(projects.filter(p => p.id !== id));
     }
   };
 
   const updateProject = (updatedProject: Project) => {
-    saveProjects(projects.map(p => p.id === updatedProject.id ? updatedProject : p));
+    await saveProjects(projects.map(p => p.id === updatedProject.id ? updatedProject : p));
     setIsEditingProject(null);
     setNewFile({ id: Date.now(), type: "image", url: "", title: "", description: "" });
   };
@@ -835,3 +835,26 @@ export default function Admin() {
     </div>
   );
 }
+
+// Add this function before saveProjects
+const saveProjectsToCloud = async (updatedProjects: Project[]) => {
+  try {
+    const response = await fetch('/api/projects', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ projects: updatedProjects })
+    });
+    
+    if (response.ok) {
+      console.log('Projects saved to Vercel Blob successfully');
+      return true;
+    }
+  } catch (error) {
+    console.error('Failed to save projects to cloud:', error);
+  }
+  return false;
+};
+
+// Then modify the existing saveProjects function to also save to cloud
+// Look for: const saveProjects = (updatedProjects: Project[]) => {
+// And add: await saveProjectsToCloud(updatedProjects);
