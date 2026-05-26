@@ -29,20 +29,6 @@ const DEFAULT_PROJECTS = [
     description: "IoT-enabled desk lamp with adaptive lighting and voice control.",
     imageUrl: "https://picsum.photos/id/26/800/600",
   },
-  {
-    id: 5,
-    title: "Packaging Design",
-    category: "Graphics",
-    description: "Eco-friendly packaging solution for organic food products.",
-    imageUrl: "https://picsum.photos/id/30/800/600",
-  },
-  {
-    id: 6,
-    title: "Wireless Earbuds",
-    category: "Product Design",
-    description: "Compact, ergonomic earbuds with premium sound quality and charging case.",
-    imageUrl: "https://picsum.photos/id/36/800/600",
-  },
 ];
 
 export function useListProjects(params?: { category?: string }) {
@@ -50,11 +36,9 @@ export function useListProjects(params?: { category?: string }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Load from localStorage first, then fallback to defaults
     const stored = localStorage.getItem("portfolio_projects");
     let projects = stored ? JSON.parse(stored) : DEFAULT_PROJECTS;
     
-    // Simulate network delay
     const timer = setTimeout(() => {
       let filtered = [...projects];
       
@@ -64,7 +48,7 @@ export function useListProjects(params?: { category?: string }) {
       
       setData(filtered);
       setIsLoading(false);
-    }, 300);
+    }, 100);
 
     return () => clearTimeout(timer);
   }, [params?.category]);
