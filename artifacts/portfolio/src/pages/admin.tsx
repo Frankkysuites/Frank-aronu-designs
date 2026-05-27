@@ -252,7 +252,6 @@ export default function Admin() {
     } else {
       setProjects(DEFAULT_PROJECTS);
     }
-    }
   }, [isAuthenticated]);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -932,3 +931,4 @@ export default function Admin() {
       </Dialog>
     </div>
   );
+}
