@@ -210,22 +210,26 @@ export default function Admin() {
   loadProjectsFromCloud();
 }, [isAuthenticated]);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    const storedPassword = localStorage.getItem("admin_password") || DEFAULT_PASSWORD;
+    const storedPassword = cloudPassword || DEFAULT_PASSWORD;
     if (password === storedPassword) {
       setIsAuthenticated(true);
       localStorage.setItem("admin_auth", "true");
       setPassword("");
       setError("");
+    const cloudPassword = await getPasswordFromCloud();
+
     } else {
       setError("Wrong password");
     }
   };
 
-  const handleChangePassword = () => {
+  const handleChangePassword = async () => {
     setError("");
-    const storedPassword = localStorage.getItem("admin_password") || DEFAULT_PASSWORD;
+    const cloudPassword = await getPasswordFromCloud();
+
+    const storedPassword = cloudPassword || DEFAULT_PASSWORD;
     
     if (currentPassword !== storedPassword) {
       setError("Current password is incorrect");
@@ -242,12 +246,15 @@ export default function Admin() {
       return;
     }
     
-    localStorage.setItem("admin_password", newPassword);
+    savePasswordToCloud(newPassword);
     setIsChangingPassword(false);
     setCurrentPassword("");
     setNewPassword("");
     setConfirmPassword("");
     setError("");
+    const cloudPassword = await getPasswordFromCloud();
+
+    handleLogout();
     alert("Password changed successfully! Please login again.");
     handleLogout();
   };
@@ -959,3 +966,48 @@ const saveProjectsToCloud = async (updatedProjects: Project[]) => {
 // Then modify the existing saveProjects function to also save to cloud
 // Look for: const saveProjects = (updatedProjects: Project[]) => {
 // And add: await saveProjectsToCloud(updatedProjects);
+
+// Cloud password functions
+const CLOUD_PASSWORD_KEY = "admin_password_hash";
+
+const savePasswordToCloud = async (password: string) => {
+  try {
+    const response = await fetch(`https://api.jsonbin.io/v3/b/6a162a588ef04f45381f4b84/latest`, {
+      headers: { 'X-Master-Key': '$2a$10$6WgXpSq5nZyJ.9eytzMwe.1ZH4Qyk2WeMIQLSjCEOlAp6rc2YYSsG' }
+    });
+    const result = await response.json();
+    const currentProjects = result.record?.projects || [];
+    const currentProfile = result.record?.profile || {};
+    
+    await fetch(`https://api.jsonbin.io/v3/b/6a162a588ef04f45381f4b84`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Master-Key': '$2a$10$6WgXpSq5nZyJ.9eytzMwe.1ZH4Qyk2WeMIQLSjCEOlAp6rc2YYSsG'
+      },
+      body: JSON.stringify({
+        projects: currentProjects,
+        profile: currentProfile,
+        adminPassword: password
+      })
+    });
+    console.log('✅ Password saved to cloud');
+  } catch (error) {
+    console.error('Failed to save password to cloud:', error);
+  }
+};
+
+const getPasswordFromCloud = async () => {
+  try {
+    const response = await fetch(`https://api.jsonbin.io/v3/b/6a162a588ef04f45381f4b84/latest`, {
+      headers: { 'X-Master-Key': '$2a$10$6WgXpSq5nZyJ.9eytzMwe.1ZH4Qyk2WeMIQLSjCEOlAp6rc2YYSsG' }
+    });
+    const result = await response.json();
+    return result.record?.adminPassword || null;
+  } catch (error) {
+    console.error('Failed to get password from cloud:', error);
+    return null;
+  }
+};
+
+}
