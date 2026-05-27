@@ -220,7 +220,6 @@ export default function Admin() {
   };
 
   useEffect(() => {
-    const storedAuth = localStorage.getItem("admin_auth");
     if (storedAuth === "true") {
       setIsAuthenticated(true);
     }
@@ -230,7 +229,6 @@ export default function Admin() {
   useEffect(() => {
     if (!isAuthenticated) return;
     
-    const storedProjects = localStorage.getItem("portfolio_projects");
     
     if (storedProjects) {
       setProjects(JSON.parse(storedProjects));
@@ -267,7 +265,6 @@ export default function Admin() {
       if (password === storedPassword) {
         console.log("✅ Login successful!");
         setIsAuthenticated(true);
-        localStorage.setItem("admin_auth", "true");
         setPassword("");
         setError("");
       } else {
@@ -312,7 +309,6 @@ export default function Admin() {
 
   const handleLogout = () => {
     setIsAuthenticated(false);
-    localStorage.removeItem("admin_auth");
     setPassword("");
   };
 
@@ -403,7 +399,6 @@ export default function Admin() {
   const saveProjects = async (updatedProjects: Project[]) => {
     console.log("Saving projects to cloud...");
     setProjects(updatedProjects);
-    localStorage.setItem("portfolio_projects", JSON.stringify(updatedProjects));
     
     try {
       const response = await fetch(`https://api.jsonbin.io/v3/b/6a162a588ef04f45381f4b84/latest?t=${Date.now()}`, {
@@ -441,7 +436,6 @@ export default function Admin() {
   const saveProfile = async (updatedProfile: Profile) => {
     console.log("Saving profile to cloud...");
     setProfile(updatedProfile);
-    localStorage.setItem("portfolio_profile", JSON.stringify(updatedProfile));
     
     try {
       // Get current data from cloud
