@@ -401,8 +401,41 @@ export default function Admin() {
   };
 
   const saveProjects = async (updatedProjects: Project[]) => {
+    console.log("Saving projects to cloud...");
     setProjects(updatedProjects);
     localStorage.setItem("portfolio_projects", JSON.stringify(updatedProjects));
+    
+    try {
+      const response = await fetch(`https://api.jsonbin.io/v3/b/6a162a588ef04f45381f4b84/latest?t=${Date.now()}`, {
+        headers: { 'X-Master-Key': '$2a$10$6WgXpSq5nZyJ.9eytzMwe.1ZH4Qyk2WeMIQLSjCEOlAp6rc2YYSsG' }
+      });
+      const result = await response.json();
+      const currentProfile = result.record?.profile || {};
+      const currentLikes = result.record?.likes || {};
+      const currentPassword = result.record?.adminPassword || null;
+      
+      const saveResponse = await fetch(`https://api.jsonbin.io/v3/b/6a162a588ef04f45381f4b84`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Master-Key': '$2a$10$6WgXpSq5nZyJ.9eytzMwe.1ZH4Qyk2WeMIQLSjCEOlAp6rc2YYSsG'
+        },
+        body: JSON.stringify({
+          projects: updatedProjects,
+          profile: currentProfile,
+          likes: currentLikes,
+          adminPassword: currentPassword
+        })
+      });
+      
+      if (saveResponse.ok) {
+        console.log("✅ Projects saved to cloud");
+      } else {
+        console.error("Failed to save projects to cloud");
+      }
+    } catch (error) {
+      console.error("Error saving projects to cloud:", error);
+    }
   };
 
   const saveProfile = async (updatedProfile: Profile) => {
