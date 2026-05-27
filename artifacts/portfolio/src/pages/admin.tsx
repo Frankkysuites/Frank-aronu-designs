@@ -237,7 +237,7 @@ export default function Admin() {
         // Load profile from cloud
         const loadProfileFromCloud = async () => {
           try {
-            const response = await fetch(`https://api.jsonbin.io/v3/b/6a162a588ef04f45381f4b84/latest`, {
+            const response = await fetch(`https://api.jsonbin.io/v3/b/6a162a588ef04f45381f4b84/latest`?t=${Date.now()}`?t=${Date.now()}`, {
               headers: { "X-Master-Key": "$2a$10$6WgXpSq5nZyJ.9eytzMwe.1ZH4Qyk2WeMIQLSjCEOlAp6rc2YYSsG" }
             });
             const result = await response.json();
@@ -412,7 +412,7 @@ export default function Admin() {
     
     try {
       // Get current data from cloud
-      const response = await fetch(`https://api.jsonbin.io/v3/b/6a162a588ef04f45381f4b84/latest`, {
+      const response = await fetch(`https://api.jsonbin.io/v3/b/6a162a588ef04f45381f4b84/latest`?t=${Date.now()}`?t=${Date.now()}`, {
         headers: { 'X-Master-Key': '$2a$10$6WgXpSq5nZyJ.9eytzMwe.1ZH4Qyk2WeMIQLSjCEOlAp6rc2YYSsG' }
       });
       const result = await response.json();
