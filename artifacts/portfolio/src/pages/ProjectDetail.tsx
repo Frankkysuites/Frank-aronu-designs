@@ -18,7 +18,7 @@ import { useLikes } from "@/hooks/useLikes";
 import type { Project, ProjectFile } from "@/types/project";
 
 const JSONBIN_BIN_ID = "6a162a588ef04f45381f4b84";
-const JSONBIN_API_KEY = "$2a$10$6WgXpSq5nZyJ.9eytzMwe.1ZH4Qyk2WeMIQLSjCEOlAp6rc2YYSsG";
+const JSONBIN_API_KEY = "$2a$10$EIl1NhPjoZl3kOB3kTo9kegq0RAxybzMFZC4UE6tgRwI04vlnt1m2";
 
 export default function ProjectDetail() {
   const { id } = useParams<{ id: string }>();
