@@ -106,7 +106,7 @@ const DEFAULT_PROFILE: Profile = {
   title: "Graphics & Product Designer",
   location: "Africa",
   email: "hello.frankaronu.designs@gmail.com",
-  bio: "With over 8 years of experience in graphic design and product design, I help brands create meaningful connections through thoughtful design solutions. I believe in the power of simplicity and the beauty of functional aesthetics.",
+  bio: "With over 8 years of experience in graphic design and product design, I help brands create meaningful connections through thoughtful design solutions.",
   imageUrl: "https://picsum.photos/id/64/400/400",
   social: {
     dribbble: "https://dribbble.com/",
@@ -118,6 +118,8 @@ const DEFAULT_PROFILE: Profile = {
 };
 
 const DEFAULT_PASSWORD = "admin123";
+const JSONBIN_BIN_ID = "6a162a588ef04f45381f4b84";
+const JSONBIN_API_KEY = "$2a$10$6WgXpSq5nZyJ.9eytzMwe.1ZH4Qyk2WeMIQLSjCEOlAp6rc2YYSsG";
 
 export default function Admin() {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -126,7 +128,6 @@ export default function Admin() {
   const [isAddingProject, setIsAddingProject] = useState(false);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
-  const [isManagingFiles, setIsManagingFiles] = useState<Project | null>(null);
   const [password, setPassword] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -155,6 +156,47 @@ export default function Admin() {
     description: "",
   });
 
+  // Cloud password functions
+  const getPasswordFromCloud = async () => {
+    try {
+      const response = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
+        headers: { 'X-Master-Key': JSONBIN_API_KEY }
+      });
+      const result = await response.json();
+      return result.record?.adminPassword || null;
+    } catch (error) {
+      console.error('Failed to get password from cloud:', error);
+      return null;
+    }
+  };
+
+  const savePasswordToCloud = async (pass: string) => {
+    try {
+      const response = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
+        headers: { 'X-Master-Key': JSONBIN_API_KEY }
+      });
+      const result = await response.json();
+      const currentProjects = result.record?.projects || [];
+      const currentProfile = result.record?.profile || {};
+      
+      await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Master-Key': JSONBIN_API_KEY
+        },
+        body: JSON.stringify({
+          projects: currentProjects,
+          profile: currentProfile,
+          adminPassword: pass
+        })
+      });
+      console.log('✅ Password saved to cloud');
+    } catch (error) {
+      console.error('Failed to save password to cloud:', error);
+    }
+  };
+
   useEffect(() => {
     const storedAuth = localStorage.getItem("admin_auth");
     if (storedAuth === "true") {
@@ -164,51 +206,21 @@ export default function Admin() {
   }, []);
 
   useEffect(() => {
-  if (!isAuthenticated) return;
-
-  // Load profile from localStorage (still needed for profile data)
-  const storedProfile = localStorage.getItem("portfolio_profile");
-  if (storedProfile) {
-    setProfile(JSON.parse(storedProfile));
-  }
-
-  // Load projects from cloud
-  const loadProjectsFromCloud = async () => {
-    try {
-      const response = await fetch(`https://api.jsonbin.io/v3/b/6a162a588ef04f45381f4b84/latest`, {
-        headers: { 
-          'X-Master-Key': '$2a$10$6WgXpSq5nZyJ.9eytzMwe.1ZH4Qyk2WeMIQLSjCEOlAp6rc2YYSsG'
-        }
-      });
-      const result = await response.json();
-      let projects = [];
-      if (result.record && result.record.projects) {
-        projects = result.record.projects;
-      }
-      
-      if (projects.length > 0) {
-        setProjects(projects);
-      } else {
-        // If cloud is empty, use default projects
-        setProjects(DEFAULT_PROJECTS);
-        // Also save defaults to cloud
-        await fetch(`https://api.jsonbin.io/v3/b/6a162a588ef04f45381f4b84`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Master-Key': '$2a$10$6WgXpSq5nZyJ.9eytzMwe.1ZH4Qyk2WeMIQLSjCEOlAp6rc2YYSsG'
-          },
-          body: JSON.stringify({ projects: DEFAULT_PROJECTS })
-        });
-      }
-    } catch (error) {
-      console.error('Failed to load from cloud:', error);
+    if (!isAuthenticated) return;
+    
+    const storedProjects = localStorage.getItem("portfolio_projects");
+    const storedProfile = localStorage.getItem("portfolio_profile");
+    
+    if (storedProjects) {
+      setProjects(JSON.parse(storedProjects));
+    } else {
       setProjects(DEFAULT_PROJECTS);
     }
-  };
-  
-  loadProjectsFromCloud();
-}, [isAuthenticated]);
+    
+    if (storedProfile) {
+      setProfile(JSON.parse(storedProfile));
+    }
+  }, [isAuthenticated]);
 
   const handleLogin = async (e: React.FormEvent) => {
     console.log("🔐 Login button clicked");
@@ -238,7 +250,7 @@ export default function Admin() {
 
   const handleChangePassword = async () => {
     setError("");
-
+    const cloudPassword = await getPasswordFromCloud();
     const storedPassword = cloudPassword || DEFAULT_PASSWORD;
     
     if (currentPassword !== storedPassword) {
@@ -262,8 +274,6 @@ export default function Admin() {
     setNewPassword("");
     setConfirmPassword("");
     setError("");
-
-    handleLogout();
     alert("Password changed successfully! Please login again.");
     handleLogout();
   };
@@ -358,87 +368,16 @@ export default function Admin() {
     }
   };
 
-const saveProjectsToCloud = async (updatedProjects: Project[]) => {
-  const JSONBIN_BIN_ID = "6a162a588ef04f45381f4b84";
-  const JSONBIN_API_KEY = "$2a$10$6WgXpSq5nZyJ.9eytzMwe.1ZH4Qyk2WeMIQLSjCEOlAp6rc2YYSsG";
-  
-  try {
-    const response = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Master-Key': JSONBIN_API_KEY
-      },
-      body: JSON.stringify({ projects: updatedProjects })
-    });
-    
-    if (response.ok) {
-      console.log('✅ Projects saved to JSONBin successfully');
-    } else {
-      console.error('Failed to save to JSONBin');
-    }
-  } catch (error) {
-    console.error('Error saving to JSONBin:', error);
-  }
-};
-
   const saveProjects = async (updatedProjects: Project[]) => {
-  setProjects(updatedProjects);
-  
-  // Save directly to cloud
-  try {
-    const response = await fetch(`https://api.jsonbin.io/v3/b/6a162a588ef04f45381f4b84`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Master-Key': '$2a$10$6WgXpSq5nZyJ.9eytzMwe.1ZH4Qyk2WeMIQLSjCEOlAp6rc2YYSsG'
-      },
-      body: JSON.stringify({ projects: updatedProjects })
-    });
-    
-    if (response.ok) {
-      console.log('✅ Projects saved to cloud');
-      alert('Project saved! All visitors can see it.');
-    } else {
-      alert('Failed to save to cloud. Please try again.');
-    }
-  } catch (error) {
-    console.error('Save error:', error);
-    alert('Network error. Please try again.');
-  }
-};
+    setProjects(updatedProjects);
+    localStorage.setItem("portfolio_projects", JSON.stringify(updatedProjects));
+  };
 
   const saveProfile = async (updatedProfile: Profile) => {
-  setProfile(updatedProfile);
-  localStorage.setItem("portfolio_profile", JSON.stringify(updatedProfile));
-  
-  try {
-    const projectsResponse = await fetch(`https://api.jsonbin.io/v3/b/6a162a588ef04f45381f4b84/latest`, {
-      headers: { 'X-Master-Key': '$2a$10$6WgXpSq5nZyJ.9eytzMwe.1ZH4Qyk2WeMIQLSjCEOlAp6rc2YYSsG' }
-    });
-    const result = await projectsResponse.json();
-    const currentProjects = result.record?.projects || [];
-    
-    await fetch(`https://api.jsonbin.io/v3/b/6a162a588ef04f45381f4b84`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Master-Key': '$2a$10$6WgXpSq5nZyJ.9eytzMwe.1ZH4Qyk2WeMIQLSjCEOlAp6rc2YYSsG'
-      },
-      body: JSON.stringify({ 
-        projects: currentProjects, 
-        profile: updatedProfile 
-      })
-    });
-    console.log('✅ Profile saved to cloud');
-    alert('Profile saved! Visitors will see the changes.');
-  } catch (error) {
-    console.error('Failed to save profile to cloud:', error);
-    alert('Profile saved locally but cloud sync failed.');
-  }
-  
-  setIsEditingProfile(false);
-};
+    setProfile(updatedProfile);
+    localStorage.setItem("portfolio_profile", JSON.stringify(updatedProfile));
+    setIsEditingProfile(false);
+  };
 
   const handleAddProject = async () => {
     if (!newProject.title || !newProject.imageUrl) {
@@ -544,9 +483,6 @@ const saveProjectsToCloud = async (updatedProjects: Project[]) => {
             {error && <p className="text-red-500 text-sm">{error}</p>}
             <Button type="submit" className="w-full">Login</Button>
           </form>
-          <p className="text-sm text-gray-500 mt-4 text-center">
-            
-          </p>
         </div>
       </div>
     );
@@ -671,7 +607,7 @@ const saveProjectsToCloud = async (updatedProjects: Project[]) => {
         </DialogContent>
       </Dialog>
 
-      {/* Add/Edit Project Modal with Full File Management */}
+      {/* Add/Edit Project Modal */}
       <Dialog open={isAddingProject || !!isEditingProject} onOpenChange={() => {
         setIsAddingProject(false);
         setIsEditingProject(null);
@@ -680,10 +616,8 @@ const saveProjectsToCloud = async (updatedProjects: Project[]) => {
         <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
           <DialogTitle>{isEditingProject ? "Edit Project" : "Add New Project"}</DialogTitle>
           <div className="space-y-4 mt-4">
-            {/* Basic Information */}
             <div className="space-y-4">
               <h3 className="font-semibold text-lg dark:border-gray-700 border-b pb-2">Basic Information</h3>
-              
               <div>
                 <Label>Project Title *</Label>
                 <Input
@@ -696,7 +630,6 @@ const saveProjectsToCloud = async (updatedProjects: Project[]) => {
                   className="mt-1"
                 />
               </div>
-              
               <div>
                 <Label>Category *</Label>
                 <select
@@ -711,7 +644,6 @@ const saveProjectsToCloud = async (updatedProjects: Project[]) => {
                   <option value="Product Design">Product Design</option>
                 </select>
               </div>
-              
               <div>
                 <Label>Project Description *</Label>
                 <Textarea
@@ -727,10 +659,8 @@ const saveProjectsToCloud = async (updatedProjects: Project[]) => {
               </div>
             </div>
 
-            {/* Cover Image */}
             <div className="space-y-4">
               <h3 className="font-semibold text-lg dark:border-gray-700 border-b pb-2">Cover Image</h3>
-              
               <div>
                 <Label>Project Cover Image *</Label>
                 <div className="flex gap-4 items-start flex-wrap mt-1">
@@ -775,11 +705,9 @@ const saveProjectsToCloud = async (updatedProjects: Project[]) => {
               </div>
             </div>
 
-            {/* Additional Project Files */}
             <div className="space-y-4">
               <h3 className="font-semibold text-lg dark:border-gray-700 border-b pb-2">Additional Project Files</h3>
               
-              {/* Current Files List */}
               {((isEditingProject && (isEditingProject.files?.length || 0) > 0) || 
                 (!isEditingProject && (newProject.files?.length || 0) > 0)) && (
                 <div className="space-y-2">
@@ -790,13 +718,8 @@ const saveProjectsToCloud = async (updatedProjects: Project[]) => {
                         <div className="flex items-center gap-2">
                           {getFileIcon(file.type)}
                           <span className="text-sm font-medium">{file.title}</span>
-                          {file.description && <span className="text-xs text-gray-500">- {file.description.substring(0, 50)}</span>}
                         </div>
-                        <Button 
-                          size="sm" 
-                          variant="ghost" 
-                          onClick={() => removeFileFromCurrentProject(file.id)}
-                        >
+                        <Button size="sm" variant="ghost" onClick={() => removeFileFromCurrentProject(file.id)}>
                           <X className="w-3 h-3" />
                         </Button>
                       </div>
@@ -805,7 +728,6 @@ const saveProjectsToCloud = async (updatedProjects: Project[]) => {
                 </div>
               )}
               
-              {/* Add New File */}
               <div className="dark:border-gray-700 border rounded-lg p-4 dark:bg-gray-900 bg-gray-50">
                 <Label className="mb-2 block">Add File to This Project</Label>
                 <div className="space-y-3">
@@ -856,23 +778,10 @@ const saveProjectsToCloud = async (updatedProjects: Project[]) => {
                     <Plus className="w-4 h-4 mr-2" /> Add This File
                   </Button>
                 </div>
-                <p className="text-xs text-gray-500 mt-2">
-                  💡 Tip: Add multiple files - logos, mockups, process work, final deliverables, etc.
-                </p>
+                <p className="text-xs text-gray-500 mt-2">💡 Tip: Add multiple files - logos, mockups, process work, final deliverables, etc.</p>
               </div>
-              
-              {/* File Count */}
-              {((isEditingProject && (isEditingProject.files?.length || 0) > 0) || 
-                (!isEditingProject && (newProject.files?.length || 0) > 0)) && (
-                <div className="bg-blue-50 dark:border-gray-700 border dark:border-gray-700 border-blue-200 rounded-lg p-3">
-                  <p className="text-sm text-blue-800">
-                    📎 Total: {(isEditingProject ? isEditingProject.files.length : newProject.files.length)} file(s) attached to this project
-                  </p>
-                </div>
-              )}
             </div>
 
-            {/* Action Buttons */}
             <div className="flex justify-end gap-2 pt-4 dark:border-gray-700 border-t">
               <Button variant="outline" onClick={() => {
                 setIsAddingProject(false);
@@ -952,4 +861,3 @@ const saveProjectsToCloud = async (updatedProjects: Project[]) => {
     </div>
   );
 }
-// Force rebuild - Wed May 27 04:37:47 AM WAT 2026
