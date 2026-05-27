@@ -743,13 +743,40 @@ export default function Admin() {
           <DialogTitle>Edit Profile</DialogTitle>
           <div className="space-y-4 mt-4">
             <div>
-              <Label>Profile Picture URL</Label>
-              <Input
-                value={profile.image_url}
-                onChange={(e) => setProfile({...profile, image_url: e.target.value})}
-                placeholder="https://example.com/photo.jpg"
-              />
-              <p className="text-xs text-gray-500 mt-1">Enter image URL</p>
+              <Label>Profile Picture</Label>
+              <div className="flex gap-4 items-start flex-wrap mt-1">
+                <img 
+                  src={profile.image_url} 
+                  alt="Profile" 
+                  className="w-20 h-20 rounded-full object-cover border"
+                  onError={(e) => (e.target as HTMLImageElement).src = "https://via.placeholder.com/80?text=No+Image"}
+                />
+                <div className="space-y-2">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleProfileImageUpload}
+                    className="hidden"
+                    id="profile-image-upload"
+                  />
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => document.getElementById("profile-image-upload")?.click()}
+                    disabled={uploading}
+                  >
+                    <Upload className="w-4 h-4 mr-2" />
+                    {uploading ? "Uploading..." : "Upload Photo"}
+                  </Button>
+                  <p className="text-xs text-gray-500">or enter URL below</p>
+                  <Input
+                    value={profile.image_url}
+                    onChange={(e) => setProfile({...profile, image_url: e.target.value})}
+                    placeholder="https://example.com/photo.jpg"
+                    className="w-80"
+                  />
+                </div>
+              </div>
             </div>
             <div>
               <Label>Name</Label>
