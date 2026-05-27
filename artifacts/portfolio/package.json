@@ -75,3 +75,4 @@
     "zod": "catalog:"
   }
 }
+    "@supabase/supabase-js": "^2.106.2",
