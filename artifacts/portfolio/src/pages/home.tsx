@@ -20,6 +20,10 @@ export default function Home() {
   );
   const { profile, isLoading: profileLoading } = useProfile();
 
+  if (profileLoading) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  }
+
   const selectedProject = projects?.find((p) => p.id === selectedProjectId);
 
   return (
