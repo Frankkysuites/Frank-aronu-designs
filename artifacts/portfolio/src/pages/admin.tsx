@@ -1,3 +1,6 @@
+import { VERSION } from "@/version";
+console.log("Admin version:", VERSION);
+// VERSION: 2.0 - FORCE REBUILD - $(date)
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -190,7 +193,6 @@ export default function Admin() {
         }
       });
       const result = await response.json();
-      const currentProjects = result.record?.projects || [];
       const currentProfile = result.record?.profile || {};
       
       const saveResponse = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
@@ -200,7 +202,6 @@ export default function Admin() {
           'X-Master-Key': JSONBIN_API_KEY
         },
         body: JSON.stringify({
-          projects: currentProjects,
           profile: currentProfile,
           adminPassword: pass
         })
@@ -230,8 +231,6 @@ export default function Admin() {
     if (!isAuthenticated) return;
     
     
-    if (currentProjects || []) {
-      setProjects(JSON.parse(currentProjects || []));
         // Load profile from cloud
         const loadProfileFromCloud = async () => {
           try {
@@ -443,7 +442,6 @@ export default function Admin() {
         headers: { 'X-Master-Key': '$2a$10$6WgXpSq5nZyJ.9eytzMwe.1ZH4Qyk2WeMIQLSjCEOlAp6rc2YYSsG' }
       });
       const result = await response.json();
-      const currentProjects = result.record?.projects || [];
       const currentLikes = result.record?.likes || {};
       const currentPassword = result.record?.adminPassword || null;
       
@@ -455,7 +453,6 @@ export default function Admin() {
           'X-Master-Key': '$2a$10$6WgXpSq5nZyJ.9eytzMwe.1ZH4Qyk2WeMIQLSjCEOlAp6rc2YYSsG'
         },
         body: JSON.stringify({
-          projects: currentProjects,
           profile: updatedProfile,
           likes: currentLikes,
           adminPassword: currentPassword
