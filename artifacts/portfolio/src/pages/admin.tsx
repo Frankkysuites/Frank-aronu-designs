@@ -393,6 +393,28 @@ const saveProjectsToCloud = async (updatedProjects: Project[]) => {
 };
 
   const saveProfile = (updatedProfile: Profile) => {
+  // Save to cloud as well
+  const saveToCloud = async () => {
+    try {
+      const projectsResponse = await fetch(`https://api.jsonbin.io/v3/b/6a162a588ef04f45381f4b84/latest`, {
+        headers: { "X-Master-Key": "$2a$10$6WgXpSq5nZyJ.9eytzMwe.1ZH4Qyk2WeMIQLSjCEOlAp6rc2YYSsG" }
+      });
+      const result = await projectsResponse.json();
+      const currentProjects = result.record?.projects || [];
+      await fetch(`https://api.jsonbin.io/v3/b/6a162a588ef04f45381f4b84`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Master-Key": "$2a$10$6WgXpSq5nZyJ.9eytzMwe.1ZH4Qyk2WeMIQLSjCEOlAp6rc2YYSsG"
+        },
+        body: JSON.stringify({ projects: currentProjects, profile: updatedProfile })
+      });
+      console.log("✅ Profile saved to cloud");
+    } catch (error) {
+      console.error("Failed to save profile to cloud:", error);
+    }
+  };
+  saveToCloud();
     setProfile(updatedProfile);
     localStorage.setItem("portfolio_profile", JSON.stringify(updatedProfile));
     setIsEditingProfile(false);

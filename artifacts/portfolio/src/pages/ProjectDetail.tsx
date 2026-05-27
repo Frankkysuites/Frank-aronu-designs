@@ -28,28 +28,29 @@ export default function ProjectDetail() {
   const [profile, setProfile] = useState<any>(null);
 
   useEffect(() => {
-    const storedProjects = localStorage.getItem("portfolio_projects");
-    if (storedProjects) {
-      const projects: Project[] = JSON.parse(storedProjects);
-      const found = projects.find(p => p.id === parseInt(id!));
-      setProject(found || null);
-    }
     
-    const storedProfile = localStorage.getItem("portfolio_profile");
-    if (storedProfile) {
-      setProfile(JSON.parse(storedProfile));
-    }
-    
-    const storedLikes = localStorage.getItem("project_likes");
-    if (storedLikes) {
-      const likes = JSON.parse(storedLikes);
-      if (likes[id!]) {
-        setLiked(likes[id!].liked);
-        setLikeCount(likes[id!].count);
+    const fetchProject = async () => {
+      try {
+        const response = await fetch(`https://api.jsonbin.io/v3/b/6a162a588ef04f45381f4b84/latest`, {
+          headers: { 
+            'X-Master-Key': '$2a$10$6WgXpSq5nZyJ.9eytzMwe.1ZH4Qyk2WeMIQLSjCEOlAp6rc2YYSsG'
+          }
+        });
+        const result = await response.json();
+        let projects = [];
+        if (result.record && result.record.projects) {
+          projects = result.record.projects;
+        }
+        const found = projects.find(p => p.id === parseInt(id!));
+        setProject(found || null);
+      } catch (error) {
+        console.error('Failed to fetch project:', error);
+        setProject(null);
       }
-    }
+      setIsLoading(false);
+    };
     
-    setIsLoading(false);
+    fetchProject();
     window.scrollTo(0, 0);
   }, [id]);
 

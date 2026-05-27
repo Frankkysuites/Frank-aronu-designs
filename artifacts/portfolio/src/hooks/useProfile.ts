@@ -23,7 +23,7 @@ const DEFAULT_PROFILE: Profile = {
   title: "Graphics & Product Designer",
   location: "Africa",
   email: "hello.frankaronu.designs@gmail.com",
-  bio: "With over 8 years of experience in graphic design and product design, I help brands create meaningful connections through thoughtful design solutions. I believe in the power of simplicity and the beauty of functional aesthetics.",
+  bio: "With over 8 years of experience in graphic design and product design, I help brands create meaningful connections through thoughtful design solutions.",
   imageUrl: "https://picsum.photos/id/64/400/400",
   social: {
     dribbble: "https://dribbble.com/",
@@ -39,11 +39,35 @@ export function useProfile() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const stored = localStorage.getItem("portfolio_profile");
-    if (stored) {
-      setProfile(JSON.parse(stored));
-    }
-    setIsLoading(false);
+    const fetchProfile = async () => {
+      try {
+        const response = await fetch(`https://api.jsonbin.io/v3/b/6a162a588ef04f45381f4b84/latest`, {
+          headers: { 
+            'X-Master-Key': '$2a$10$6WgXpSq5nZyJ.9eytzMwe.1ZH4Qyk2WeMIQLSjCEOlAp6rc2YYSsG'
+          }
+        });
+        const result = await response.json();
+        
+        if (result.record && result.record.profile) {
+          setProfile(result.record.profile);
+        } else {
+          const stored = localStorage.getItem("portfolio_profile");
+          if (stored) {
+            setProfile(JSON.parse(stored));
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch profile:', error);
+        const stored = localStorage.getItem("portfolio_profile");
+        if (stored) {
+          setProfile(JSON.parse(stored));
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchProfile();
   }, []);
 
   return { profile, isLoading };
