@@ -220,7 +220,7 @@ export default function Admin() {
   };
 
   useEffect(() => {
-    if (storedAuth === "true") {
+    if (localStorage.getItem("admin_auth") === "true" === "true") {
       setIsAuthenticated(true);
     }
     setIsLoading(false);
