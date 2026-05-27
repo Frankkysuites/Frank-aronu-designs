@@ -227,7 +227,6 @@ export default function Admin() {
 
   const handleChangePassword = async () => {
     setError("");
-    const cloudPassword = await getPasswordFromCloud();
 
     const storedPassword = cloudPassword || DEFAULT_PASSWORD;
     
@@ -252,7 +251,6 @@ export default function Admin() {
     setNewPassword("");
     setConfirmPassword("");
     setError("");
-    const cloudPassword = await getPasswordFromCloud();
 
     handleLogout();
     alert("Password changed successfully! Please login again.");
