@@ -230,8 +230,8 @@ export default function Admin() {
     if (!isAuthenticated) return;
     
     
-    if (storedProjects) {
-      setProjects(JSON.parse(storedProjects));
+    if (currentProjects || []) {
+      setProjects(JSON.parse(currentProjects || []));
         // Load profile from cloud
         const loadProfileFromCloud = async () => {
           try {
