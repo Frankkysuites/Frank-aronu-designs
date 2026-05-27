@@ -252,7 +252,6 @@ export default function Admin() {
     } else {
       setProjects(DEFAULT_PROJECTS);
     }
-    
     }
   }, [isAuthenticated]);
 
@@ -933,4 +932,3 @@ export default function Admin() {
       </Dialog>
     </div>
   );
-}
