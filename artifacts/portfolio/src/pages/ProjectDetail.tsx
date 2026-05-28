@@ -120,7 +120,7 @@ export default function ProjectDetail() {
     }
   };
 
-  const handleShare = () => { setShowShareMenu(!showShareMenu); };
+  const handleShare = async () => { setShowShareMenu(!showShareMenu); };
     const url = window.location.href;
     const title = project?.title || "Check out this project";
     
