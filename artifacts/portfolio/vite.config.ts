@@ -15,3 +15,6 @@ export default defineConfig({
     emptyOutDir: true,
   },
 })
+
+// Environment variables are automatically loaded by Vite
+// They are exposed as import.meta.env.VITE_*

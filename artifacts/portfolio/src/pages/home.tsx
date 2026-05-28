@@ -46,7 +46,7 @@ export default function Home() {
           <div className="flex-shrink-0">
             <div className="w-40 h-40 md:w-52 md:h-52 rounded-full overflow-hidden bg-gradient-to-br from-purple-500 to-pink-500 p-1">
               <img
-                src={profile.imageUrl}
+                src={profile.image_url}
                 alt={profile.name}
                 className="w-full h-full rounded-full object-cover"
               />
@@ -137,7 +137,7 @@ export default function Home() {
               >
                 <div className="relative overflow-hidden rounded-2xl bg-muted">
                   <img
-                    src={project.imageUrl}
+                    src={project.image_url}
                     alt={project.title}
                     className="w-full h-80 object-cover transition-transform duration-700 group-hover:scale-105"
                   />
