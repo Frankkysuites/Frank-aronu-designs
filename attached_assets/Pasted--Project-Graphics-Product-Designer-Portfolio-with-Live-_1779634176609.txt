@@ -1,0 +1,109 @@
+# Project: Graphics & Product Designer Portfolio with Live Image Upload (Vercel Blob)
+
+## Objective
+Build a fully responsive portfolio website for a Graphics and Product Designer. The site must allow me to upload new project images directly through a password-protected admin page on the LIVE Vercel deployment, without touching code or redeploying manually.
+
+## Core Functional Requirements
+
+### 1. Admin Upload Page (`/admin`)
+- Password-protected (hardcoded password: `designer2025` – make it easy for me to change later).
+- Form with fields:
+  - Image upload (JPG/PNG only, max 5MB)
+  - Project title (text)
+  - Category (dropdown: "Graphics" or "Product Design")
+  - Description (short textarea)
+- On submit:
+  - Image saves to **Vercel Blob**.
+  - Metadata (title, category, description, blob URL) saves to a JSON array stored in **Vercel Blob** as a separate metadata file (e.g., `projects-metadata.json`).
+- After successful upload, show the new project immediately in a list below the form.
+- Each existing project in the list must have a **Delete button** that removes both the image blob and its metadata entry.
+
+### 2. Public Portfolio Page (`/`)
+- Fetches all projects from the metadata JSON file stored in Vercel Blob.
+- Displays projects in a responsive CSS grid (3 columns on desktop, 2 on tablet, 1 on mobile).
+- Filter buttons: "All", "Graphics", "Product Design" – JavaScript filtering without page reload.
+- Clicking any project opens a lightbox/modal showing:
+  - Larger version of the image
+  - Title
+  - Description
+  - Category label
+- The page must handle empty state (no projects uploaded yet).
+
+### 3. Contact Section
+- Static section on the homepage with:
+  - Designer name (placeholder: "Your Name")
+  - Email placeholder: "hello@yourportfolio.com"
+  - Social links: Dribbble, Behance, LinkedIn (just icons + placeholder URLs I can edit later).
+- Styled consistently with the rest of the site.
+
+### 4. Design & Styling
+- Minimal, modern, clean aesthetic.
+- Neutral background (off-white or light gray).
+- Cards have subtle shadows and hover scaling/transition.
+- Typography: sans-serif (Inter, system fonts).
+- Fully responsive (mobile-first approach).
+- No complex animations – keep focus on the work.
+
+## Technical Stack (Enforced)
+- **Next.js 14+** (App Router)
+- **@vercel/blob** for all file storage (images + metadata JSON)
+- **Tailwind CSS** (or plain CSS if easier for you, but prefer Tailwind)
+- Deployed on **Vercel (free tier)**
+
+## Environment Variables Required
+- `BLOB_READ_WRITE_TOKEN` – must be read from `process.env` in API routes.
+
+## API Routes to Implement
+
+### `app/api/upload/route.ts`
+- Accepts multipart form data with image, title, category, description.
+- Saves image to Vercel Blob.
+- Fetches current `projects-metadata.json` from Blob, appends new project, saves back to Blob.
+- Returns success or error.
+
+### `app/api/projects/route.ts`
+- GET: Returns the parsed `projects-metadata.json` from Blob (empty array if not exists).
+- DELETE: Accepts `{ blobUrl: string }` – deletes that image from Blob, also removes its entry from metadata, and saves updated metadata back to Blob.
+
+## Admin Page Password Protection
+- Hardcoded password check in a Server Action or API middleware.
+- Simple cookie-based session (just for this demo – secure enough for a portfolio).
+- If not logged in, show a simple login form with password input.
+
+## Error Handling & Edge Cases
+- Show user-friendly error messages on upload (file too large, wrong type, network error).
+- If metadata file doesn’t exist yet, create it on first upload.
+- Prevent duplicate deletions.
+
+## Deployment & Setup Instructions (to be included in README.md)
+1. Clone the repository.
+2. Run `npm install`.
+3. Create a Vercel Blob store from Vercel dashboard → Storage → Create Blob.
+4. Copy `BLOB_READ_WRITE_TOKEN` to `.env.local`.
+5. Run locally with `npm run dev`.
+6. Push to GitHub, import into Vercel, add same environment variable in Vercel project settings.
+7. After deployment, visit `your-domain.vercel.app/admin` to upload projects.
+8. No need to redeploy after adding or deleting projects.
+
+## Constraints & Notes
+- Do NOT save uploaded files to local filesystem (e.g., `/public` or `/tmp`).
+- Do NOT require a database – only Vercel Blob.
+- Provide clear code comments, especially around Blob read/write operations.
+- The final code must run on Vercel without read-only filesystem errors.
+
+## Deliverables
+- Full Next.js project code.
+- README with exact setup steps, including how to change the admin password.
+- Example of `projects-metadata.json` structure.
+
+## Example Metadata JSON Structure
+```json
+[
+  {
+    "id": "unique-id-or-timestamp",
+    "title": "Brand Identity",
+    "category": "Graphics",
+    "description": "A complete brand system...",
+    "imageUrl": "https://xxx.blob.vercel-storage.com/..."
+  }
+]
