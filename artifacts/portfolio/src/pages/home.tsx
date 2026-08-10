@@ -13,9 +13,12 @@ type CategoryFilter = "All" | "Graphics" | "Product Design";
 
 export default function Home() {
   const [filter, setFilter] = useState<CategoryFilter>("All");
+  const { data: projects, isLoading } = useListProjects(
+    filter === "All" ? {} : { category: filter as ProjectCategory }
+  );
+  const { profile, isLoading: profileLoading } = useProfile();
 
-  // Preload the first 3 project images as soon as we have them
-  // so they appear instantly when the grid renders
+  // FIX: useEffect now AFTER projects is declared — was above it, causing TDZ crash
   useEffect(() => {
     if (!projects || projects.length === 0) return;
     projects.slice(0, 3).forEach((p: any) => {
@@ -24,10 +27,6 @@ export default function Home() {
       img.src = p.image_url;
     });
   }, [projects]);
-  const { data: projects, isLoading } = useListProjects(
-    filter === "All" ? {} : { category: filter as ProjectCategory }
-  );
-  const { profile, isLoading: profileLoading } = useProfile();
 
   if (profileLoading) {
     return (
@@ -41,13 +40,8 @@ export default function Home() {
     <div className="min-h-screen flex flex-col">
       <header className="px-6 py-12 md:py-24 max-w-7xl mx-auto w-full">
         <div className="max-w-2xl">
-          <h1 className="text-4xl md:text-6xl font-bold leading-tight mb-6">
-            Designing clarity in a complex world.
-          </h1>
-          <p className="text-lg md:text-xl text-muted-foreground font-light leading-relaxed">
-            I'm a multidisciplinary designer focused on crafting precise,
-            engaging digital and physical experiences.
-          </p>
+          <h1 className="text-4xl md:text-6xl font-bold leading-tight mb-6">Designing clarity in a complex world.</h1>
+          <p className="text-lg md:text-xl text-muted-foreground font-light leading-relaxed">I'm a multidisciplinary designer focused on crafting precise, engaging digital and physical experiences.</p>
         </div>
       </header>
 
@@ -62,20 +56,16 @@ export default function Home() {
             <h2 className="text-2xl md:text-3xl font-bold mb-2">{profile.name}</h2>
             <p className="text-muted-foreground mb-4">{profile.title}</p>
             <div className="flex flex-wrap gap-4 justify-center md:justify-start mb-4">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <MapPin className="w-4 h-4" /><span>{profile.location}</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Mail className="w-4 h-4" /><span>{profile.email}</span>
-              </div>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground"><MapPin className="w-4 h-4" /><span>{profile.location}</span></div>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground"><Mail className="w-4 h-4" /><span>{profile.email}</span></div>
             </div>
             <p className="text-muted-foreground max-w-xl mx-auto md:mx-0">{profile.bio}</p>
             <div className="flex gap-4 mt-6 justify-center md:justify-start flex-wrap">
-              {profile.social.dribbble && <Button variant="outline" size="sm" className="gap-2 rounded-full" asChild><a href={profile.social.dribbble} target="_blank"><FaDribbble /> Dribbble</a></Button>}
-              {profile.social.behance && <Button variant="outline" size="sm" className="gap-2 rounded-full" asChild><a href={profile.social.behance} target="_blank"><FaBehance /> Behance</a></Button>}
-              {profile.social.linkedin && <Button variant="outline" size="sm" className="gap-2 rounded-full" asChild><a href={profile.social.linkedin} target="_blank"><FaLinkedin /> LinkedIn</a></Button>}
-              {profile.social.instagram && <Button variant="outline" size="sm" className="gap-2 rounded-full" asChild><a href={profile.social.instagram} target="_blank"><FaInstagram /> Instagram</a></Button>}
-              {profile.social.whatsapp && <Button variant="outline" size="sm" className="gap-2 rounded-full" asChild><a href={profile.social.whatsapp} target="_blank"><FaWhatsapp /> WhatsApp</a></Button>}
+              {profile.social.dribbble && <Button variant="outline" size="sm" className="gap-2 rounded-full" asChild><a href={profile.social.dribbble} target="_blank" rel="noopener noreferrer"><FaDribbble /> Dribbble</a></Button>}
+              {profile.social.behance && <Button variant="outline" size="sm" className="gap-2 rounded-full" asChild><a href={profile.social.behance} target="_blank" rel="noopener noreferrer"><FaBehance /> Behance</a></Button>}
+              {profile.social.linkedin && <Button variant="outline" size="sm" className="gap-2 rounded-full" asChild><a href={profile.social.linkedin} target="_blank" rel="noopener noreferrer"><FaLinkedin /> LinkedIn</a></Button>}
+              {profile.social.instagram && <Button variant="outline" size="sm" className="gap-2 rounded-full" asChild><a href={profile.social.instagram} target="_blank" rel="noopener noreferrer"><FaInstagram /> Instagram</a></Button>}
+              {profile.social.whatsapp && <Button variant="outline" size="sm" className="gap-2 rounded-full" asChild><a href={profile.social.whatsapp} target="_blank" rel="noopener noreferrer"><FaWhatsapp /> WhatsApp</a></Button>}
             </div>
           </div>
         </div>
@@ -87,9 +77,7 @@ export default function Home() {
             <button key={cat} onClick={() => setFilter(cat)}
               className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-300 whitespace-nowrap ${
                 filter === cat ? "bg-foreground text-background shadow-md scale-105" : "bg-transparent text-muted-foreground hover:text-foreground hover:bg-muted"
-              }`}>
-              {cat}
-            </button>
+              }`}>{cat}</button>
           ))}
         </div>
 
@@ -130,11 +118,11 @@ export default function Home() {
           <div className="flex flex-col md:flex-row justify-between items-center gap-4 mt-16 pt-8 border-t border-gray-800">
             <p className="text-sm text-gray-400">© 2025 {profile.name}. All rights reserved.</p>
             <div className="flex gap-6">
-              {profile.social.dribbble && <a href={profile.social.dribbble} target="_blank" className="text-gray-400 hover:text-white"><FaDribbble size={20} /></a>}
-              {profile.social.behance && <a href={profile.social.behance} target="_blank" className="text-gray-400 hover:text-white"><FaBehance size={20} /></a>}
-              {profile.social.linkedin && <a href={profile.social.linkedin} target="_blank" className="text-gray-400 hover:text-white"><FaLinkedin size={20} /></a>}
-              {profile.social.instagram && <a href={profile.social.instagram} target="_blank" className="text-gray-400 hover:text-white"><FaInstagram size={20} /></a>}
-              {profile.social.whatsapp && <a href={profile.social.whatsapp} target="_blank" className="text-gray-400 hover:text-white"><FaWhatsapp size={20} /></a>}
+              {profile.social.dribbble && <a href={profile.social.dribbble} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white"><FaDribbble size={20} /></a>}
+              {profile.social.behance && <a href={profile.social.behance} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white"><FaBehance size={20} /></a>}
+              {profile.social.linkedin && <a href={profile.social.linkedin} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white"><FaLinkedin size={20} /></a>}
+              {profile.social.instagram && <a href={profile.social.instagram} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white"><FaInstagram size={20} /></a>}
+              {profile.social.whatsapp && <a href={profile.social.whatsapp} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white"><FaWhatsapp size={20} /></a>}
             </div>
           </div>
         </div>
