@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "wouter";
 import { useListProjects } from "@/hooks/useListProjects";
 import { useProfile } from "@/hooks/useProfile";
@@ -13,6 +13,17 @@ type CategoryFilter = "All" | "Graphics" | "Product Design";
 
 export default function Home() {
   const [filter, setFilter] = useState<CategoryFilter>("All");
+
+  // Preload the first 3 project images as soon as we have them
+  // so they appear instantly when the grid renders
+  useEffect(() => {
+    if (!projects || projects.length === 0) return;
+    projects.slice(0, 3).forEach((p: any) => {
+      if (!p.image_url) return;
+      const img = new Image();
+      img.src = p.image_url;
+    });
+  }, [projects]);
   const { data: projects, isLoading } = useListProjects(
     filter === "All" ? {} : { category: filter as ProjectCategory }
   );

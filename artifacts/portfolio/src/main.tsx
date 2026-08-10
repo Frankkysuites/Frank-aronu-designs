@@ -4,17 +4,19 @@ import './index.css'
 import App from './App.tsx'
 import { supabase } from './lib/supabase'
 
-// FIX: Kick off the Supabase projects query immediately on script load,
-// before React even mounts. This runs in parallel with JS parsing/hydration
-// so by the time the Home component asks for projects, the response is
-// already in flight (or done). Cuts perceived load by ~300–700ms.
-const projectsPrefetch = supabase
+// Kick off both queries before React mounts — runs in parallel with JS parsing.
+// By the time Home/ProjectDetail components ask for data, responses are already
+// in flight. Cuts perceived load by ~300–700ms on cold Supabase starts.
+;(window as any).__projectsPrefetch = supabase
   .from('projects')
-  .select('*')
+  .select('id, title, slug, category, description, image_url')
   .order('id', { ascending: false })
 
-// Expose on window so useListProjects can consume the in-flight promise
-;(window as any).__projectsPrefetch = projectsPrefetch
+;(window as any).__profilePrefetch = supabase
+  .from('profile')
+  .select('*')
+  .eq('id', 1)
+  .single()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

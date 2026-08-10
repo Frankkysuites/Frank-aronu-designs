@@ -1,75 +1,83 @@
-import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
+import { useState, useEffect } from 'react'
+import { supabase } from '@/lib/supabase'
 
-type SocialLinks = {
-  dribbble: string;
-  behance: string;
-  linkedin: string;
-  instagram: string;
-  whatsapp: string;
-};
+const PROFILE_CACHE_KEY = 'fa_profile_cache'
+const CACHE_TTL = 1000 * 60 * 30 // 30 minutes (profile changes rarely)
 
-type Profile = {
-  name: string;
-  title: string;
-  location: string;
-  email: string;
-  bio: string;
-  imageUrl: string;
-  social: SocialLinks;
-};
-
-const DEFAULT_PROFILE: Profile = {
-  name: "Frank Aronu",
-  title: "Graphics & Product Designer",
-  location: "Africa",
-  email: "hello.frankaronu.designs@gmail.com",
-  bio: "With over 8 years of experience in graphic design and product design, I help brands create meaningful connections through thoughtful design solutions.",
-  imageUrl: "https://picsum.photos/id/64/400/400",
+const DEFAULT_PROFILE = {
+  name: 'Frank Aronu',
+  title: 'Graphics & Product Designer',
+  location: 'Nigeria',
+  email: 'hello.frankaronu.designs@gmail.com',
+  bio: 'Multidisciplinary designer focused on crafting precise, engaging digital experiences.',
+  imageUrl: '',
   social: {
-    dribbble: "https://dribbble.com/",
-    behance: "https://behance.net/",
-    linkedin: "https://linkedin.com/in/",
-    instagram: "https://instagram.com/",
-    whatsapp: "https://wa.me/",
+    dribbble: '',
+    behance: '',
+    linkedin: '',
+    instagram: '',
+    whatsapp: '',
   },
-};
+}
+
+function readProfileCache() {
+  try {
+    const raw = localStorage.getItem(PROFILE_CACHE_KEY)
+    if (!raw) return null
+    const { data, ts } = JSON.parse(raw)
+    if (Date.now() - ts > CACHE_TTL) return null
+    return data
+  } catch {
+    return null
+  }
+}
+
+function mapProfile(row: any) {
+  return {
+    name: row.name ?? DEFAULT_PROFILE.name,
+    title: row.title ?? DEFAULT_PROFILE.title,
+    location: row.location ?? DEFAULT_PROFILE.location,
+    email: row.email ?? DEFAULT_PROFILE.email,
+    bio: row.bio ?? DEFAULT_PROFILE.bio,
+    imageUrl: row.image_url ?? '',
+    social: {
+      dribbble:  row.social?.dribbble  ?? '',
+      behance:   row.social?.behance   ?? '',
+      linkedin:  row.social?.linkedin  ?? '',
+      instagram: row.social?.instagram ?? '',
+      whatsapp:  row.social?.whatsapp  ?? '',
+    },
+  }
+}
 
 export function useProfile() {
-  const [profile, setProfile] = useState<Profile>(DEFAULT_PROFILE);
-  const [isLoading, setIsLoading] = useState(true);
+  const cached = readProfileCache()
+  const [profile, setProfile] = useState(cached ?? DEFAULT_PROFILE)
+  const [isLoading, setIsLoading] = useState(!cached)
 
   useEffect(() => {
-    const fetchProfile = async () => {
+    let cancelled = false
+    ;(async () => {
       try {
         const { data, error } = await supabase
           .from('profile')
           .select('*')
           .eq('id', 1)
-          .single();
-        
-        if (error && error.code !== 'PGRST116') throw error;
-        
-        if (data) {
-          setProfile({
-            name: data.name || DEFAULT_PROFILE.name,
-            title: data.title || DEFAULT_PROFILE.title,
-            location: data.location || DEFAULT_PROFILE.location,
-            email: data.email || DEFAULT_PROFILE.email,
-            bio: data.bio || DEFAULT_PROFILE.bio,
-            imageUrl: data.image_url || DEFAULT_PROFILE.imageUrl,
-            social: data.social || DEFAULT_PROFILE.social,
-          });
+          .single()
+        if (error) throw error
+        if (!cancelled && data) {
+          const mapped = mapProfile(data)
+          setProfile(mapped)
+          localStorage.setItem(PROFILE_CACHE_KEY, JSON.stringify({ data: mapped, ts: Date.now() }))
         }
-      } catch (error) {
-        console.error('Failed to fetch profile:', error);
+      } catch (err) {
+        console.error('Failed to fetch profile:', err)
       } finally {
-        setIsLoading(false);
+        if (!cancelled) setIsLoading(false)
       }
-    };
-    
-    fetchProfile();
-  }, []);
+    })()
+    return () => { cancelled = true }
+  }, [])
 
-  return { profile, isLoading };
+  return { profile, isLoading }
 }
