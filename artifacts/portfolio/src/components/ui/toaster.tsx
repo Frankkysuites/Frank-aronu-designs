@@ -1,4 +1,3 @@
-// Simple toast implementation
 import { useState, useEffect } from 'react'
 
 type ToastProps = {
@@ -7,55 +6,55 @@ type ToastProps = {
   variant?: 'default' | 'destructive'
 }
 
-let toastId = 0
-const listeners: Array<(toasts: any[]) => void> = []
-let toasts: any[] = []
+type ToastItem = ToastProps & { id: number }
 
-function notify() {
-  listeners.forEach(listener => listener(toasts))
+let _toastId = 0
+const _listeners: Array<(toasts: ToastItem[]) => void> = []
+let _toasts: ToastItem[] = []
+
+function _notify() {
+  _listeners.forEach(fn => fn(_toasts))
 }
 
-export function toast({ title, description, variant = 'default' }: ToastProps) {
-  const id = toastId++
-  const newToast = { id, title, description, variant }
-  toasts = [...toasts, newToast]
-  notify()
-  
+// Named export so use-toast.ts can import it directly
+export function toast(props: ToastProps) {
+  const id = _toastId++
+  _toasts = [..._toasts, { id, ...props }]
+  _notify()
   setTimeout(() => {
-    toasts = toasts.filter(t => t.id !== id)
-    notify()
+    _toasts = _toasts.filter(t => t.id !== id)
+    _notify()
   }, 3000)
-  
   return id
 }
 
 export function Toaster() {
-  const [state, setState] = useState<any[]>([])
-  
+  const [items, setItems] = useState<ToastItem[]>([])
+
   useEffect(() => {
-    const listener = (newToasts: any[]) => setState([...newToasts])
-    listeners.push(listener)
+    const listener = (next: ToastItem[]) => setItems([...next])
+    _listeners.push(listener)
     return () => {
-      const index = listeners.indexOf(listener)
-      if (index > -1) listeners.splice(index, 1)
+      const i = _listeners.indexOf(listener)
+      if (i > -1) _listeners.splice(i, 1)
     }
   }, [])
-  
-  if (state.length === 0) return null
-  
+
+  if (items.length === 0) return null
+
   return (
     <div className="fixed bottom-4 right-4 z-50 space-y-2">
-      {state.map(toast => (
+      {items.map(item => (
         <div
-          key={toast.id}
+          key={item.id}
           className={`p-4 rounded-lg shadow-lg min-w-[300px] ${
-            toast.variant === 'destructive' 
-              ? 'bg-red-500 text-white' 
+            item.variant === 'destructive'
+              ? 'bg-red-500 text-white'
               : 'bg-gray-800 text-white'
           }`}
         >
-          {toast.title && <div className="font-semibold">{toast.title}</div>}
-          {toast.description && <div className="text-sm mt-1">{toast.description}</div>}
+          {item.title && <div className="font-semibold">{item.title}</div>}
+          {item.description && <div className="text-sm mt-1">{item.description}</div>}
         </div>
       ))}
     </div>
