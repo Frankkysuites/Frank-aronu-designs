@@ -11,29 +11,23 @@ export default defineConfig(({ mode }) => ({
   build: {
     outDir: 'dist',
     emptyOutDir: true,
-    // Suppress warnings for chunks up to 700kb (icons lib is large)
-    chunkSizeWarningLimit: 700,
+    sourcemap: mode === 'development',
+    minify: 'esbuild',
+    target: 'es2020',
+    // FIX: remove function-based manualChunks — it caused circular reference
+    // errors when chunks reference each other before initialization.
+    // Vite's default chunking handles this safely on its own.
     rollupOptions: {
       output: {
-        // Split vendor code into separate cacheable chunks
-        manualChunks(id) {
-          if (id.includes('node_modules/react') || id.includes('node_modules/react-dom')) {
-            return 'react'
-          }
-          if (id.includes('@supabase')) return 'supabase'
-          if (id.includes('lucide-react') || id.includes('react-icons')) return 'icons'
-          if (id.includes('@radix-ui')) return 'radix'
-          if (id.includes('@tanstack')) return 'query'
+        // Simple vendor split: just separate node_modules from app code.
+        // This avoids the circular dep while still keeping vendor code cacheable.
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'wouter'],
+          supabase: ['@supabase/supabase-js'],
         },
       },
     },
-    // Sourcemaps only in dev (smaller prod bundle, source not exposed)
-    sourcemap: mode === 'development',
-    // Minify with esbuild (faster than terser, good enough for production)
-    minify: 'esbuild',
-    target: 'es2020',
   },
-  // Pre-bundle these for faster dev server cold start
   optimizeDeps: {
     include: ['react', 'react-dom', '@supabase/supabase-js', '@tanstack/react-query'],
   },
