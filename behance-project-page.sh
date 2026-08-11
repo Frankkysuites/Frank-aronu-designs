@@ -1,3 +1,15 @@
+#!/usr/bin/env bash
+# =============================================================================
+# Redesign ProjectDetail.tsx — Behance-style layout
+# Run from repo root: bash behance-project-page.sh
+# =============================================================================
+
+set -e
+
+echo ""
+echo "▶  Writing Behance-style ProjectDetail …"
+
+cat > "artifacts/portfolio/src/pages/ProjectDetail.tsx" << 'EOF'
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useLocation } from "wouter";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -403,3 +415,13 @@ export default function ProjectDetail() {
     </div>
   );
 }
+EOF
+
+echo "   ✅  ProjectDetail.tsx rewritten — Behance-style layout"
+echo ""
+echo "▶  Committing and pushing …"
+git add -A && git commit -m "feat: Behance-style project detail page" && git push
+echo ""
+echo "╔══════════════════════════════════════════════════════════╗"
+echo "║  Done ✅  Vercel will deploy in ~1 min                  ║"
+echo "╚══════════════════════════════════════════════════════════╝"
